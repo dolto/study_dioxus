@@ -1,0 +1,15 @@
+[package]
+name = "hooks_and_state"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+dioxus = { version = "0.5.0-alpha.0", features = ["fullstack"] }
+log = "0.4.21"
+
+[features]
+default = []
+server = ["dioxus/axum"]
+web = ["dioxus/web"]
