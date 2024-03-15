@@ -59,6 +59,8 @@ async fn get_server_data() -> Result<String, ServerFnError> {
     Ok("Hello from the server".to_string())
 }
 
+// need docker run --rm --pull always -p 80:8000 surrealdb/surrealdb:latest start -A memory --user root --pass root
+
 #[derive(Serialize, Deserialize)]
 struct Count {
     value: i32,
