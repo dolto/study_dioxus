@@ -61,11 +61,10 @@ async fn get_server_data() -> Result<String, ServerFnError> {
 
 // need docker run --rm --pull always -p 80:8000 surrealdb/surrealdb:latest start -A memory --user root --pass root
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 struct Count {
     value: i32,
 }
-#[server]
 async fn get_surreal_db(number: i32) -> Result<Vec<i32>, ServerFnError> {
     println!("try connect surrealDB");
     let db = Surreal::new::<Ws>("localhost:80").await?;
@@ -77,12 +76,14 @@ async fn get_surreal_db(number: i32) -> Result<Vec<i32>, ServerFnError> {
     println!("try ns surrealDB");
     db.use_ns("counter").use_db("db").await?;
     println!("try create surrealDB");
-    let _: Vec<Count> = db
+    let c: Vec<Count> = db
         .create("counter")
         .content(Count { value: number })
         .await?;
+    println!("{c:?}");
     println!("try select surrealDB");
     let selected: Vec<Count> = db.select("counter").await?;
+    println!("selected: {selected:?}");
     let result = selected.iter().map(|c| c.value).collect();
     println!("{result:?}");
     Ok(result)

@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 mod controller;
 mod model;
-// mod viewr;
+mod viewr;
 
 use axum::{
     routing::{get, post},

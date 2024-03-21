@@ -3,12 +3,15 @@ use axum::{
     response::{Html, Redirect},
     Json,
 };
-use chrono::Utc;
 use dioxus::prelude::*;
 use serde::{Deserialize, Serialize};
 use surrealdb::sql::{Datetime, Thing};
 
-use crate::{model::Post, DB};
+use crate::{
+    model::Post,
+    viewr::{Home, PostList},
+    DB,
+};
 
 // .route("/", get(home_endpoint))
 // .route("/post_list", get(post_list_endpoint))
@@ -21,19 +24,15 @@ use crate::{model::Post, DB};
 // .route("/comment_delete/:id", post(comment_delete))
 // .into_make_service(),
 pub async fn home_endpoint() -> Html<String> {
-    Html(dioxus_ssr::render_element(rsx! {"Hello"}))
+    Html(dioxus_ssr::render_element(Home()))
 }
 
-#[derive(Deserialize, Debug)]
-pub struct PostListSearchTags {
-    value: Vec<String>,
-}
-#[derive(Deserialize, Serialize, Debug)]
-struct PostId {
-    id: Thing,
-    created_at: Datetime,
-    title: String,
-    tag: Vec<String>,
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct PostId {
+    pub id: Thing,
+    pub created_at: Datetime,
+    pub title: String,
+    pub tag: Vec<String>,
 }
 pub async fn post_list_endpoint(Path(tags): Path<String>) -> Html<String> {
     let tags: Vec<String> = tags.split(',').map(|t| t.to_string()).collect();
@@ -46,30 +45,26 @@ pub async fn post_list_endpoint(Path(tags): Path<String>) -> Html<String> {
     // let test_post: Vec<Post> = DB.select("posts").await.unwrap();
     // println!("{test_post:?}");
     println!("{posts:?}");
-    let posts = posts
-        .iter()
-        .filter(|p| {
-            for tag in tags.iter() {
-                if p.tag.contains(tag) {
-                    return true;
+    let posts = if tags.len() > 0 {
+        posts
+            .into_iter()
+            .filter(|p| {
+                for tag in tags.iter() {
+                    if p.tag.contains(tag) {
+                        return true;
+                    }
                 }
-            }
-            false
-        })
-        .map(|p| {
-            rsx! {
-                p{
-                    "{p.title}, {p.created_at.to_string()}"
-                }
-            }
-        });
-    Html(dioxus_ssr::render_element(rsx! {{posts}}))
+                false
+            })
+            .collect::<Vec<PostId>>()
+    } else {
+        posts
+    };
+    let mut app = VirtualDom::new_with_props(PostList, posts.clone());
+    app.rebuild_in_place();
+    Html(dioxus_ssr::render(&app))
 }
 
-// #[derive(Deserialize)]
-// struct Id {
-//     id: String,
-// }
 pub async fn post_show_endpoint(Path(id): Path<String>) -> Html<String> {
     println!("{id}");
     let post: Option<Post> = DB.select(("posts", id.as_str())).await.unwrap();

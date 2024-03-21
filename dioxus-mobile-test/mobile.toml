@@ -1,0 +1,5 @@
+[app]
+name = "diouxs_mobile_test"
+stylized-name = "dioxus_test"
+domain = "example.com"
+template-pack = "wry"
